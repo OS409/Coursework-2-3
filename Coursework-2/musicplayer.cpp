@@ -1,0 +1,88 @@
+#include "music.h"
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <sstream>
+
+void addMultipleTracks(TrackLibrary &library, const std::string &filename)
+{
+    std::ifstream source_file;
+    source_file.open(filename);
+    if (!source_file) {
+        std::cout << "Error: Couldn't open source file.\n";
+    }
+
+    std::string line;
+    int lineCount;
+    while (std::getline(source_file, line))
+    {
+        ++lineCount;
+        std::istringstream iss(line);
+        std::string title, artist;
+        int duration;
+        if (!(std::getline(iss, title, '\t') && std::getline(iss, artist, '\t') && (iss >> duration))) {
+            std::cout << "Error: Invalid input on line " << lineCount << std::endl;
+        } else {
+	  AudioTrack track(title, artist, duration);
+	  library.addTrack(track);
+            std::cout << "Files successfully loaded";
+        }
+    }
+}
+
+int main()
+{
+
+    TrackLibrary library;
+    char option;
+    do {
+
+        std::cout << "\n******** Menu ********\n";
+        std::cout << "s : save tracks in the library to a file\n";
+        std::cout << "e : search by artist/band name\n";
+        std::cout << "r : remove specific track(s)\n";
+        std::cout << "a : Add all tracks from a file\n";
+        std::cout << "p : exit program\n";
+        std::cout << "select an option from above: ";
+        std::cin >> option;
+
+        if (option == 'a') {
+
+            std::string filename;
+            std::cout << "Enter the filename to load tracks from: ";
+            std::cin >> filename;
+            addMultipleTracks(library, filename);
+
+        } else if (option == 's') {
+	  std::string filename;
+	  std::cout << "What do you want the file the tracks are saved to be named?";
+	  std::cin >> filename;
+	  library.saveLibraryToFile(filename);
+        } else if (option == 'e') {
+	  std::string artist;
+	  std::cout << "Enter the name of the artist/band name you want to search: ";
+	  std::cin >> artist;
+	  std::vector<AudioTrack> tracksByArtist = library.searchByArtist(artist);
+	  std::cout << "Tracks by " << artist << ":\n";
+	  for (const auto& track : tracksByArtist) {
+	    std::cout << track.getTitle() << " - " << track.getArtist() << " - " << track.getDuration() << " seconds\n";
+	  }
+	} else if (option == 'r') {
+	  std::string title;
+	  std::cout << "Enter the title of the track to remove: ";
+	  std::cin >> title;
+	  if (library.removeTrackByTitle(title)) {
+                std::cout << "Track removed.\n";
+            } else {
+                std::cout << "Track not found.\n";
+            }
+        } else if (option != 'p') {
+            std::cout << "Invalid option. Please enter s, e, r, a, or p\n";
+        }
+
+    } while (option != 'p');
+
+    std::cout << "Exiting...\n";
+
+    return 0;
+}
